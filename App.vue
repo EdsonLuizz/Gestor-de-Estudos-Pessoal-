@@ -1,20 +1,9 @@
-<script setup>
-// Não precisamos importar LoginPage ou HelloWorld aqui se eles são gerenciados pelo router
-// ou não são usados diretamente neste template.
-</script>
-
 <template>
   <router-view />
 </template>
 
 <style scoped>
-/* Seus estilos atuais do App.vue. Você pode mantê-los ou ajustá-los.
-   Os estilos para 'header', 'nav', etc., podem não ser relevantes
-   se App.vue agora só contém <router-view /> e a LoginPage cuida do seu próprio layout.
-   Considere se esses estilos devem ir para um componente de Layout específico
-   ou para dentro da LoginPage se forem exclusivos dela. */
-
-/* Vou manter seus estilos aqui por enquanto, mas avalie a necessidade deles neste arquivo. */
+  
 header {
   line-height: 1.5;
   max-height: 100vh;
