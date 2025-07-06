@@ -2,15 +2,10 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Counter } from 'k6/metrics';
 
-/* =========================================================
- * CONFIGURAÇÕES GERAIS
- * ======================================================= */
 export const options = {
   summaryTrendStats: ['avg', 'min', 'max', 'p(90)', 'p(95)', 'p(99)'],
 
-  // Dois cenários independentes, cada um medindo um endpoint
   scenarios: {
-    // --------------- LEITURA -----------------
     read_plans: {
       executor: 'ramping-arrival-rate',      // controla vazão (reqs/s)
       exec: 'readPlans',                     // função a ser chamada
@@ -25,7 +20,6 @@ export const options = {
       ],
     },
 
-    // --------------- ESCRITA -----------------
     write_plans: {
       executor: 'ramping-arrival-rate',
       exec: 'createPlan',
@@ -42,15 +36,12 @@ export const options = {
     },
   },
 
-  // Limites de aceite (ajuste conforme necessidade)
   thresholds: {
-    // Latência (95 º percentil)
     'http_req_duration{endpoint:readPlans}':  ['p(95)<400'],
     'http_req_duration{endpoint:createPlan}': ['p(95)<600'],
 
-    // Vazão média – contador customizado criado abaixo
-    'throughput{endpoint:readPlans}':  ['rate>40'],  // 40 req/s em média
-    'throughput{endpoint:createPlan}': ['rate>8'],   // 8  req/s em média
+    'throughput{endpoint:readPlans}':  ['rate>40'], 
+    'throughput{endpoint:createPlan}': ['rate>8'],   
   },
 };
 
@@ -73,17 +64,14 @@ export function setup() {
   const res = http.post(`${BASE_URL}/api/auth/login`, JSON.stringify(CREDENTIALS), {
     headers: { 'Content-Type': 'application/json' },
   });
-
-  // VERIFICA SE O LOGIN DEU CERTO (status 200 ou 201)
+  
   if (res.status !== 200 && res.status !== 201) {
-    // Se o login falhar, joga um erro e PARA O TESTE INTEIRO.
     console.error('Erro no login!');
     console.error(`Status: ${res.status}`);
     console.error(`Corpo: ${res.body}`);
     throw new Error('Falha ao obter o token de autenticação no setup. Abortando teste.');
   }
 
-  // Se o login funcionou, extrai o token e continua.
   console.log('Login bem-sucedido, extraindo token...');
   const { token } = res.json();
   if (!token) {
@@ -103,15 +91,8 @@ export function readPlans(data) {
   throughput.add(1, { endpoint: 'readPlans' });
 
   check(res, { 'GET 200': (r) => r.status === 200 });
-
-  // Pequeno sleep apenas para dar realismo a cada VU;
-  // a vazão principal é controlada pelo executor.
-  sleep(1);
 }
 
-/* =========================================================
- * Cenário de ESCRITA – POST /plans
- * ======================================================= */
 export function createPlan(data) {
   const payload = JSON.stringify({
     name: `Plano ENEM ${__ITER}`,
@@ -132,13 +113,5 @@ export function createPlan(data) {
   throughput.add(1, { endpoint: 'createPlan' });
 
   check(res, { 'POST 201': (r) => r.status === 201 });
-
-  sleep(1);
 }
 
-/* =========================================================
- * TEARDOWN – se precisar remover dados criados, faça aqui
- * ======================================================= */
-export function teardown(data) {
-  // Ex.: deletar planos criados durante o teste
-}
